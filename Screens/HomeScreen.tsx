@@ -2,9 +2,7 @@ import {
   View,
   Text,
   StyleSheet,
-  Button,
   ActivityIndicator,
-  Touchable,
   TouchableOpacity,
   Image,
 } from 'react-native';
@@ -26,7 +24,9 @@ const HomeScreen = ({navigation}) => {
     console.log(newCameraPermisson);
   };
 
-  if (device == null) return <ActivityIndicator />;
+  if (device == null) {
+    return <ActivityIndicator />;
+  }
 
   const takePicture = async () => {
     if (camera.current != null) {
@@ -49,42 +49,20 @@ const HomeScreen = ({navigation}) => {
             photo={true}
           />
           <TouchableOpacity
-            style={{
-              width: 60,
-              height: 60,
-              backgroundColor: 'red',
-              borderRadius: 30,
-              position: 'absolute',
-              bottom: 50,
-              alignSelf: 'center',
-            }}
+            style={styles.pictureButton}
             onPress={() => {
               takePicture();
-            }}></TouchableOpacity>
+            }}>
+            <Text style={styles.captureButton}>Capture</Text>
+          </TouchableOpacity>
         </View>
       ) : (
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
+        <View style={styles.imageContainer}>
           {imageData !== '' && (
-            <Image
-              source={{uri: 'file://' + imageData}}
-              style={{width: '90%', height: 200}}
-            />
+            <Image source={{uri: 'file://' + imageData}} style={styles.image} />
           )}
           <TouchableOpacity
-            style={{
-              width: '90%',
-              height: 50,
-              borderWidth: 1,
-              alignSelf: 'center',
-              borderRadius: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
+            style={styles.clickPhotoBtn}
             onPress={() => setTakePhotoClicked(true)}>
             <Text style={{color: 'black'}}>click photo</Text>
           </TouchableOpacity>
@@ -93,5 +71,29 @@ const HomeScreen = ({navigation}) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  pictureButton: {
+    width: 60,
+    height: 60,
+    backgroundColor: 'red',
+    borderRadius: 30,
+    position: 'absolute',
+    bottom: 50,
+    alignSelf: 'center',
+  },
+  captureButton: {color: 'white', bottom: -18, alignSelf: 'center'},
+  imageContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
+  image: {width: '100%', height: 500},
+  clickPhotoBtn: {
+    width: '90%',
+    height: 50,
+    borderWidth: 1,
+    alignSelf: 'center',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
 
 export default HomeScreen;
