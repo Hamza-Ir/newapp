@@ -12,11 +12,28 @@ import {Camera, useCameraDevice} from 'react-native-vision-camera';
 const HomeScreen = ({navigation}) => {
   const device = useCameraDevice('front');
   const camera = useRef<Camera>(null);
+  const [flaskData, setFlaskData] = useState([{}]);
   const [imageData, setImageData] = useState('');
   const [takePhotoClicked, setTakePhotoClicked] = useState(false);
 
   useEffect(() => {
-    checkPermission();
+    const fetchData = async () => {
+      await checkPermission();
+      console.log('Fetching data from Flask');
+      try {
+        const res = await fetch('http://192.168.100.32:5000/members');
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await res.json();
+        setFlaskData(data);
+        console.log('Data from Flask:', data);
+      } catch (error) {
+        console.log('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   const checkPermission = async () => {
