@@ -20,19 +20,6 @@ const HomeScreen = ({navigation}) => {
     const fetchData = async () => {
       await checkPermission();
       console.log('Fetching data from Flask');
-      try {
-        const res = await fetch(
-          'https://c9be-34-106-93-98.ngrok-free.app/members',
-        );
-        if (!res.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await res.json();
-        setFlaskData(data);
-        console.log('Data from Flask:', data);
-      } catch (error) {
-        console.log('Error fetching data:', error);
-      }
     };
 
     fetchData();
@@ -53,6 +40,33 @@ const HomeScreen = ({navigation}) => {
       setImageData(photo.path);
       setTakePhotoClicked(false);
       console.log(photo.path);
+
+      // Create a new FormData object
+      const data = new FormData();
+      data.append('file', {
+        uri: 'file://' + photo.path,
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+      });
+
+      // Send the image to the Flask server
+      try {
+        const response = await fetch(
+          'https://6e17-34-80-56-52.ngrok-free.app/upload',
+          {
+            method: 'POST',
+            body: data,
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          },
+        );
+
+        const result = await response.json();
+        console.log(result);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
     }
   };
 
