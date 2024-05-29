@@ -21,7 +21,9 @@ const HomeScreen = ({navigation}) => {
       await checkPermission();
       console.log('Fetching data from Flask');
       try {
-        const res = await fetch('http://192.168.100.32:5000/members');
+        const res = await fetch(
+          'https://c9be-34-106-93-98.ngrok-free.app/members',
+        );
         if (!res.ok) {
           throw new Error('Network response was not ok');
         }
