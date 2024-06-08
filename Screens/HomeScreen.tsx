@@ -12,7 +12,7 @@ import {Camera, useCameraDevice} from 'react-native-vision-camera';
 const HomeScreen = ({navigation}) => {
   const device = useCameraDevice('front');
   const camera = useRef<Camera>(null);
-  const [flaskData, setFlaskData] = useState([{}]);
+  //const [flaskData, setFlaskData] = useState([{}]);
   const [imageData, setImageData] = useState('');
   const [takePhotoClicked, setTakePhotoClicked] = useState(false);
 
@@ -52,7 +52,7 @@ const HomeScreen = ({navigation}) => {
       // Send the image to the Flask server
       try {
         const response = await fetch(
-          'https://6e17-34-80-56-52.ngrok-free.app/upload',
+          'https://99a3-34-73-12-10.ngrok-free.app/upload',
           {
             method: 'POST',
             body: data,

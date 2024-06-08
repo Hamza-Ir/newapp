@@ -3,6 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from './Screens/HomeScreen';
 import Stream from './Screens/Stream';
+import Settings from './Screens/Settings';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,6 +19,7 @@ const App = () => {
             tabBarLabel: 'RTSP Stream',
           }}
         />
+        <Tab.Screen name="Settings" component={Settings} />
       </Tab.Navigator>
     </NavigationContainer>
   );
