@@ -8,6 +8,12 @@ const Settings = () => {
   );
   const navigation = useNavigation();
 
+  const handleLogout = () => {
+    // Perform any additional logout logic here if needed
+    // Navigate back to the login screen
+    navigation.replace('Login');
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Add a stream!</Text>
@@ -20,6 +26,7 @@ const Settings = () => {
         title="Add"
         onPress={() => navigation.navigate('Stream', {streamUrl: text})}
       />
+      <Button title="Logout" onPress={handleLogout} color="red" />
     </View>
   );
 };
