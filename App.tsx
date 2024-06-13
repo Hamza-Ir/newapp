@@ -8,6 +8,7 @@ import LoginScreen from './Screens/LoginScreen';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import 'react-native-url-polyfill/auto';
 import Toast from 'react-native-toast-message';
+import SignupScreen from './Screens/SignupScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -37,6 +38,13 @@ const App = () => {
           component={LoginScreen}
           options={{headerShown: false}}
         />
+
+        <Stack.Screen
+          name="Signup"
+          component={SignupScreen}
+          options={{headerShown: false}}
+        />
+
         <Stack.Screen
           name="MainTabs"
           component={MainTabs}

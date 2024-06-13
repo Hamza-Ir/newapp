@@ -1,10 +1,17 @@
-import React from 'react';
-import {View, Text, TextInput, Button, StyleSheet} from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  ToastAndroid,
+  ActivityIndicator,
+} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
-import {supabase} from '../services/supabaseClient.js';
-import Toast from 'react-native-toast-message';
+import {supabase} from '../services/supabaseClient';
 
 // Validation schema
 const schema = yup.object().shape({
@@ -13,9 +20,14 @@ const schema = yup.object().shape({
     .string()
     .min(6, 'Password must be at least 6 characters')
     .required('Password is required'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password'), null], 'Passwords must match')
+    .required('Confirm Password is required'),
 });
 
-const LoginScreen = ({navigation}) => {
+const SignupScreen = ({navigation}) => {
+  const [loading, setLoading] = useState(false);
   const {
     control,
     handleSubmit,
@@ -24,27 +36,45 @@ const LoginScreen = ({navigation}) => {
     resolver: yupResolver(schema),
   });
 
-  const handleLogin = async data => {
+  const handleSignup = async data => {
+    setLoading(true);
     const {email, password} = data;
-    const {error} = await supabase.auth.signInWithPassword({email, password});
 
-    if (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Login failed',
-        text2: error.message,
+    try {
+      const {data: signupResposne, error} = await supabase.auth.signUp({
+        email: email,
+        password: password,
       });
-      console.log('Login error:', error);
-      return;
-    }
 
-    // Navigate to the Tab Navigator after successful login
-    navigation.replace('MainTabs');
+      setLoading(false);
+
+      // To get user Data
+      //console.log('SignUp Response Data:', signupResposne);
+
+      if (error) {
+        ToastAndroid.show('Signup failed: ' + error.message, ToastAndroid.LONG);
+        console.log('Signup error:', error);
+        return;
+      }
+
+      if (data) {
+        ToastAndroid.show(
+          'Signup successful! You can now log in.',
+          ToastAndroid.LONG,
+        );
+        console.log('Navigating to LoginScreen');
+        navigation.replace('Login');
+      }
+    } catch (err) {
+      setLoading(false);
+      ToastAndroid.show('Signup failed: ' + err.message, ToastAndroid.LONG);
+      console.log('Catch error:', err);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Login</Text>
+      <Text style={styles.heading}>Sign Up</Text>
 
       <Text style={styles.labels}>Email:</Text>
 
@@ -92,16 +122,43 @@ const LoginScreen = ({navigation}) => {
         )}
       />
 
-      <Button title="Login" onPress={handleSubmit(handleLogin)} />
+      <Text style={styles.labels}>Confirm Password:</Text>
+
+      <Controller
+        control={control}
+        name="confirmPassword"
+        render={({field: {onChange, onBlur, value}}) => (
+          <View>
+            <TextInput
+              style={styles.input}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Confirm Password"
+              secureTextEntry
+              autoCapitalize="none"
+            />
+            {errors.confirmPassword && (
+              <Text style={styles.errorText}>
+                {errors.confirmPassword.message}
+              </Text>
+            )}
+          </View>
+        )}
+      />
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <Button title="Sign Up" onPress={handleSubmit(handleSignup)} />
+      )}
 
       <Text style={styles.makeAccount}>
-        Don't have an account?{'  '}
+        Already have an account?{'  '}
         <Text
-          onPress={() => {
-            navigation.navigate('Signup');
-          }}
+          onPress={() => navigation.navigate('LoginScreen')}
           style={{color: 'blue'}}>
-          Sign Up
+          Log In
         </Text>
       </Text>
     </View>
@@ -145,4 +202,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default SignupScreen;
