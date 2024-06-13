@@ -6,6 +6,8 @@ import Stream from './Screens/Stream';
 import Settings from './Screens/Settings';
 import LoginScreen from './Screens/LoginScreen';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import 'react-native-url-polyfill/auto';
+import Toast from 'react-native-toast-message';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -41,6 +43,7 @@ const App = () => {
           options={{headerShown: false}}
         />
       </Stack.Navigator>
+      <Toast />
     </NavigationContainer>
   );
 };
