@@ -41,7 +41,7 @@ const SignupScreen = ({navigation}) => {
     const {email, password} = data;
 
     try {
-      const {data: signupResposne, error} = await supabase.auth.signUp({
+      const {data: signupResponse, error} = await supabase.auth.signUp({
         email: email,
         password: password,
       });
@@ -57,7 +57,7 @@ const SignupScreen = ({navigation}) => {
         return;
       }
 
-      if (data) {
+      if (signupResponse) {
         ToastAndroid.show(
           'Signup successful! You can now log in.',
           ToastAndroid.LONG,
