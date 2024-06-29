@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React from 'react';
 import {View, Text, TextInput, Button, StyleSheet} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
@@ -26,23 +27,49 @@ const LoginScreen = ({navigation}) => {
 
   const handleLogin = async data => {
     const {email, password} = data;
-    const {error} = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
 
-    if (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Login failed',
-        text2: error.message,
+    try {
+      const response = await axios.post('http://192.168.100.32:5000/signin', {
+        email,
+        password,
       });
-      console.log('Login error:', error);
-      return;
-    }
 
-    // Navigate to the Tab Navigator after successful login
-    navigation.replace('MainTabs');
+      if (response.status === 200) {
+        // Login successful
+        Toast.show({
+          type: 'success',
+          text1: 'Login successful',
+        });
+        console.log('Navigating to MainTabs');
+        console.log(response.data.id); //bhai iska kuch karlena pls
+
+        navigation.replace('MainTabs');
+      } else {
+        // Login failed with a custom message
+        Toast.show({
+          type: 'error',
+          text1: 'Login failed',
+          text2: response.data.message,
+        });
+        console.log('Login error:', response.data.message);
+      }
+    } catch (err) {
+      // Handle any errors that occur during the request
+      if (err.response && err.response.data && err.response.data.message) {
+        Toast.show({
+          type: 'error',
+          text1: 'Login failed',
+          text2: err.response.data.message,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Login failed',
+          text2: err.message,
+        });
+      }
+      console.log('Catch error:', err);
+    }
   };
 
   return (

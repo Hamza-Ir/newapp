@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, {useState} from 'react';
 import {
   View,
@@ -12,9 +13,11 @@ import {useForm, Controller} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {supabase} from '../services/supabaseClient';
+import Toast from 'react-native-toast-message';
 
 // Validation schema
 const schema = yup.object().shape({
+  name: yup.string().required('Name is required'),
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup
     .string()
@@ -38,43 +41,75 @@ const SignupScreen = ({navigation}) => {
 
   const handleSignup = async data => {
     setLoading(true);
-    const {email, password} = data;
+    const {name, email, password} = data;
 
     try {
-      const {data: signupResponse, error} = await supabase.auth.signUp({
+      const response = await axios.post('http://192.168.100.32:5000/register', {
+        name: name,
         email: email,
         password: password,
+        backendurl: '',
+        device_urls: [],
       });
 
       setLoading(false);
 
-      // To get user Data
-      //console.log('SignUp Response Data:', signupResposne);
-
-      if (error) {
-        ToastAndroid.show('Signup failed: ' + error.message, ToastAndroid.LONG);
-        console.log('Signup error:', error);
-        return;
-      }
-
-      if (signupResponse) {
-        ToastAndroid.show(
-          'Signup successful! You can now log in.',
-          ToastAndroid.LONG,
-        );
+      if (response.status === 201) {
+        Toast.show({
+          type: 'success',
+          text1: 'Signup successful!',
+          text2: 'You can now log in.',
+          position: 'bottom',
+        });
         console.log('Navigating to LoginScreen');
+        console.log(response.data.message);
         navigation.replace('Login');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Signup failed',
+          text2: response.data.message,
+          position: 'bottom',
+        });
+        console.log('Signup error:', response.data.message);
       }
     } catch (err) {
       setLoading(false);
-      ToastAndroid.show('Signup failed: ' + err.message, ToastAndroid.LONG);
-      console.log('Catch error:', err);
+      Toast.show({
+        type: 'error',
+        text1: 'Signup failed',
+        text2: err.response.data.message,
+        position: 'bottom',
+      });
+      console.log('Catch error:', err.response.data.message);
     }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Sign Up</Text>
+
+      <Text style={styles.labels}>Name:</Text>
+
+      <Controller
+        control={control}
+        name="name"
+        render={({field: {onChange, onBlur, value}}) => (
+          <View>
+            <TextInput
+              style={styles.input}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+              placeholder="Name"
+              autoCapitalize="none"
+            />
+            {errors.name && (
+              <Text style={styles.errorText}>{errors.name.message}</Text>
+            )}
+          </View>
+        )}
+      />
 
       <Text style={styles.labels}>Email:</Text>
 
@@ -156,7 +191,7 @@ const SignupScreen = ({navigation}) => {
       <Text style={styles.makeAccount}>
         Already have an account?{'  '}
         <Text
-          onPress={() => navigation.navigate('LoginScreen')}
+          onPress={() => navigation.navigate('Login')}
           style={{color: 'blue'}}>
           Log In
         </Text>
