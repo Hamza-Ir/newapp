@@ -3,9 +3,7 @@ import React, {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 
 const Settings = () => {
-  const [text, onChangeText] = useState(
-    'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-  );
+  const [text, onChangeText] = useState('http://52.66.121.78:5001/video_feed');
   const navigation = useNavigation();
 
   const handleLogout = () => {

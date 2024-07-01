@@ -9,6 +9,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import 'react-native-url-polyfill/auto';
 import Toast from 'react-native-toast-message';
 import SignupScreen from './Screens/SignupScreen';
+import VideoStream from './Screens/VideoStream';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -25,6 +26,7 @@ const MainTabs = () => {
         }}
       />
       <Tab.Screen name="Settings" component={Settings} />
+      <Tab.Screen name="VideoStream" component={VideoStream} />
     </Tab.Navigator>
   );
 };
@@ -33,7 +35,7 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen
+        {/* <Stack.Screen
           name="Login"
           component={LoginScreen}
           options={{headerShown: false}}
@@ -43,7 +45,7 @@ const App = () => {
           name="Signup"
           component={SignupScreen}
           options={{headerShown: false}}
-        />
+        /> */}
 
         <Stack.Screen
           name="MainTabs"
