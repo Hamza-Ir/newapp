@@ -8,8 +8,10 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {VLCPlayer} from 'react-native-vlc-media-player';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const Stream = () => {
   const [streams, setStreams] = useState([]);
@@ -18,29 +20,114 @@ const Stream = () => {
   const [newStreamUrl, setNewStreamUrl] = useState('');
   const [newStreamName, setNewStreamName] = useState('');
 
-  const handleAddStream = () => {
-    if (streams.some(stream => stream.url === newStreamUrl)) {
-      Alert.alert(
-        'Stream already exists',
-        'The stream URL you entered is already in the list.',
+  const fetchStreams = async () => {
+    try {
+      const csrf = await AsyncStorage.getItem('csrf');
+      const userId = await AsyncStorage.getItem('userId');
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrf,
+        id: userId,
+      };
+
+      const response = await axios.get(
+        'http://35.154.37.245:5000/api/getDevicesurl',
+        {headers},
       );
-    } else if (newStreamUrl.trim() === '' || newStreamName.trim() === '') {
-      Alert.alert('Invalid Input', 'The stream URL and name cannot be empty.');
-    } else {
-      setStreams(prevStreams => [
-        ...prevStreams,
-        {url: newStreamUrl, name: newStreamName},
-      ]);
-      setNewStreamUrl('');
-      setNewStreamName('');
-      setShowInput(false);
+      const streamsData = response.data;
+
+      const streamsArray = Object.entries(streamsData).map(([name, url]) => ({
+        name,
+        url,
+      }));
+      setStreams(streamsArray);
+    } catch (error) {
+      console.error('Error fetching streams:', error);
+      Alert.alert('Error', 'Failed to fetch streams. Please try again.');
     }
   };
 
-  const handleDeleteStream = url => {
-    setStreams(prevStreams => prevStreams.filter(stream => stream.url !== url));
-    if (selectedStream === url) {
-      setSelectedStream(null);
+  useEffect(() => {
+    fetchStreams();
+  }, []);
+
+  const handleAddStream = async () => {
+    try {
+      if (newStreamUrl.trim() === '' || newStreamName.trim() === '') {
+        Alert.alert(
+          'Invalid Input',
+          'The stream URL and name cannot be empty.',
+        );
+        return;
+      }
+
+      // Make API call to update devices
+      const url = 'http://35.154.37.245:5000/api/updatedevices';
+
+      // Retrieve CSRF token and user ID from AsyncStorage
+      const csrf = await AsyncStorage.getItem('csrf');
+      const userId = await AsyncStorage.getItem('userId');
+
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrf,
+        id: userId,
+      };
+
+      // Prepare data payload
+      const data = {
+        device_url: {
+          [newStreamName]: newStreamUrl,
+        },
+      };
+
+      // Send POST request
+      await axios.put(url, data, {headers});
+
+      // Fetch updated streams
+      await fetchStreams();
+
+      // Clear input fields and hide input
+      setNewStreamUrl('');
+      setNewStreamName('');
+      setShowInput(false);
+    } catch (error) {
+      console.error('Error adding stream:', error);
+      Alert.alert('Error', 'Failed to add stream. Please try again.');
+    }
+  };
+
+  const handleDeleteStream = async name => {
+    try {
+      // Make API call to delete the stream
+      const url = 'http://35.154.37.245:5000/api/deleteDevice';
+
+      // Retrieve CSRF token and user ID from AsyncStorage
+      const csrf = await AsyncStorage.getItem('csrf');
+      const userId = await AsyncStorage.getItem('userId');
+
+      // Prepare headers
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrf,
+        id: userId,
+      };
+
+      // Prepare data payload
+      const data = {
+        key: name,
+      };
+
+      // Send POST request
+      await axios.post(url, data, {headers});
+
+      // Fetch updated streams
+      await fetchStreams();
+    } catch (error) {
+      console.error('Error deleting stream:', error);
+      Alert.alert('Error', 'Failed to delete stream. Please try again.');
     }
   };
 
@@ -57,7 +144,7 @@ const Stream = () => {
         />
         <Text style={styles.streamName}>{item.name}</Text>
       </TouchableOpacity>
-      <Button title="Delete" onPress={() => handleDeleteStream(item.url)} />
+      <Button title="Delete" onPress={() => handleDeleteStream(item.name)} />
     </View>
   );
 

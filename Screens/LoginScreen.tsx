@@ -4,15 +4,16 @@ import {View, Text, TextInput, Button, StyleSheet} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
-import {supabase} from '../services/supabaseClient.js';
 import Toast from 'react-native-toast-message';
+import {Cookies} from '@react-native-cookies/cookies';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Validation schema
 const schema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
   password: yup
     .string()
-    .min(6, 'Password must be at least 6 characters')
+    .min(4, 'Password must be at least 4 characters')
     .required('Password is required'),
 });
 
@@ -29,7 +30,7 @@ const LoginScreen = ({navigation}) => {
     const {email, password} = data;
 
     try {
-      const response = await axios.post('http://192.168.100.32:5000/signin', {
+      const response = await axios.post('http://35.154.37.245:5000/api/login', {
         email,
         password,
       });
@@ -40,9 +41,19 @@ const LoginScreen = ({navigation}) => {
           type: 'success',
           text1: 'Login successful',
         });
-        console.log('Navigating to MainTabs');
-        console.log(response.data.id); //bhai iska kuch karlena pls
 
+        const userId = response.data.id;
+        console.log('User ID:', userId);
+
+        // Save the unique ID to AsyncStorage or a state management solution
+        await AsyncStorage.setItem('userId', userId);
+
+        // Save the cookie
+        const csrf = response.data.csrf;
+        console.log('User cookie:', csrf);
+        await AsyncStorage.setItem('csrf', csrf);
+
+        console.log('Navigating to MainTabs');
         navigation.replace('MainTabs');
       } else {
         // Login failed with a custom message
