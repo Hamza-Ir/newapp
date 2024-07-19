@@ -1,3 +1,4 @@
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -5,16 +6,22 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Image,
+  TextInput,
+  Button,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
 import {Camera, useCameraDevice} from 'react-native-vision-camera';
+import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import Toast from 'react-native-toast-message';
 
-const HomeScreen = ({navigation}) => {
+const HomeScreen = () => {
+  const navigation = useNavigation();
   const device = useCameraDevice('front');
-  const camera = useRef<Camera>(null);
-  //const [flaskData, setFlaskData] = useState([{}]);
-  const [imageData, setImageData] = useState('');
+  const camera = useRef(null);
+  const [imageData, setImageData] = useState([]);
   const [takePhotoClicked, setTakePhotoClicked] = useState(false);
+  const [personName, setPersonName] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,52 +33,78 @@ const HomeScreen = ({navigation}) => {
   }, []);
 
   const checkPermission = async () => {
-    const newCameraPermisson = await Camera.requestCameraPermission();
-    console.log(newCameraPermisson);
+    const newCameraPermission = await Camera.requestCameraPermission();
+    console.log(newCameraPermission);
+  };
+
+  const takePicture = async () => {
+    if (camera.current) {
+      const photo = await camera.current.takePhoto();
+      setImageData([...imageData, photo.path]);
+      setTakePhotoClicked(false);
+      console.log(photo.path);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    try {
+      const data = new FormData();
+      data.append('name', personName);
+      imageData.forEach((path, index) => {
+        data.append('pic', {
+          uri: 'file://' + path,
+          name: `image_${index}.jpg`,
+          type: 'image/jpeg',
+        });
+      });
+
+      const userId = await AsyncStorage.getItem('userId');
+      const csrf = await AsyncStorage.getItem('csrf');
+
+      if (!userId || !csrf) {
+        console.error('User ID or CSRF token not found in AsyncStorage.');
+        return;
+      }
+
+      const url = 'http://44.201.164.10:5000/api/uploadapi';
+      const headers = {
+        'Content-Type': 'multipart/form-data',
+        'X-CSRFToken': csrf,
+        id: userId,
+      };
+
+      const response = await axios.post(url, data, {headers});
+      console.log(response.data);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Files uploaded successfully',
+      });
+      setImageData([]);
+      setPersonName('');
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error uploading images',
+      });
+    }
   };
 
   if (device == null) {
     return <ActivityIndicator />;
   }
 
-  const takePicture = async () => {
-    if (camera.current != null) {
-      const photo = await camera.current.takePhoto();
-      setImageData(photo.path);
-      setTakePhotoClicked(false);
-      console.log(photo.path);
-
-      // Create a new FormData object
-      const data = new FormData();
-      data.append('file', {
-        uri: 'file://' + photo.path,
-        name: 'photo.jpg',
-        type: 'image/jpeg',
-      });
-
-      // Send the image to the Flask server
-      try {
-        const response = await fetch(
-          'https://fe06-34-80-160-133.ngrok-free.app/upload',
-          {
-            method: 'POST',
-            body: data,
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          },
-        );
-
-        const result = await response.json();
-        console.log(result);
-      } catch (error) {
-        console.error('Error uploading image:', error);
-      }
-    }
-  };
-
   return (
-    <View style={{flex: 1}}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Multiple File Uploads</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter Person's Name"
+        value={personName}
+        onChangeText={setPersonName}
+      />
+      <Button title="Upload Files" onPress={handleFileUpload} />
       {takePhotoClicked ? (
         <View style={{flex: 1}}>
           <Camera
@@ -81,23 +114,24 @@ const HomeScreen = ({navigation}) => {
             isActive={true}
             photo={true}
           />
-          <TouchableOpacity
-            style={styles.pictureButton}
-            onPress={() => {
-              takePicture();
-            }}>
+          <TouchableOpacity style={styles.pictureButton} onPress={takePicture}>
             <Text style={styles.captureButton}>Capture</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <View style={styles.imageContainer}>
-          {imageData !== '' && (
-            <Image source={{uri: 'file://' + imageData}} style={styles.image} />
-          )}
+          {imageData.length > 0 &&
+            imageData.map((img, index) => (
+              <Image
+                key={index}
+                source={{uri: 'file://' + img}}
+                style={styles.image}
+              />
+            ))}
           <TouchableOpacity
             style={styles.clickPhotoBtn}
             onPress={() => setTakePhotoClicked(true)}>
-            <Text style={{color: 'black'}}>click photo</Text>
+            <Text style={{color: 'black'}}>Click Photo</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -106,6 +140,9 @@ const HomeScreen = ({navigation}) => {
 };
 
 const styles = StyleSheet.create({
+  container: {flex: 1, padding: 20, justifyContent: 'center'},
+  title: {fontSize: 24, textAlign: 'center', marginBottom: 20, color: 'black'},
+  input: {borderWidth: 1, padding: 10, marginBottom: 20, color: 'black'},
   pictureButton: {
     width: 60,
     height: 60,
@@ -117,7 +154,7 @@ const styles = StyleSheet.create({
   },
   captureButton: {color: 'white', bottom: -18, alignSelf: 'center'},
   imageContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
-  image: {width: '100%', height: 500},
+  image: {width: 100, height: 100, margin: 5},
   clickPhotoBtn: {
     width: '90%',
     height: 50,

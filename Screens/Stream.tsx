@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const Stream = () => {
-  const [streams, setStreams] = useState([]);
+  const [streams, setStreams] = useState<{name: string; url: string}[]>([]);
   const [selectedStream, setSelectedStream] = useState(null);
   const [showInput, setShowInput] = useState(false);
   const [newStreamUrl, setNewStreamUrl] = useState('');
@@ -32,14 +32,14 @@ const Stream = () => {
       };
 
       const response = await axios.get(
-        'http://35.154.37.245:5000/api/getDevicesurl',
+        'http://44.201.164.10:5000/api/getDevicesurl',
         {headers},
       );
       const streamsData = response.data;
 
-      const streamsArray = Object.entries(streamsData).map(([name, url]) => ({
+      const streamsArray = Object.entries(streamsData).map(([name]) => ({
         name,
-        url,
+        url: 'http://44.201.164.10:5000/vidstr/' + name,
       }));
       setStreams(streamsArray);
     } catch (error) {
@@ -63,7 +63,7 @@ const Stream = () => {
       }
 
       // Make API call to update devices
-      const url = 'http://35.154.37.245:5000/api/updatedevices';
+      const url = 'http://44.201.164.10:5000/api/updatedevices';
 
       // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');
@@ -102,7 +102,7 @@ const Stream = () => {
   const handleDeleteStream = async name => {
     try {
       // Make API call to delete the stream
-      const url = 'http://35.154.37.245:5000/api/deleteDevice';
+      const url = 'http://44.201.164.10:5000/api/deleteDevice';
 
       // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');
@@ -196,9 +196,14 @@ const Stream = () => {
               </View>
             </View>
           ) : (
-            <View style={styles.addButton}>
-              <Button title="Add Stream" onPress={() => setShowInput(true)} />
-            </View>
+            <>
+              <View style={styles.addButton}>
+                <Button title="Add Stream" onPress={() => setShowInput(true)} />
+              </View>
+              <View>
+                <Button title="refresh" onPress={() => fetchStreams()} />
+              </View>
+            </>
           )}
         </>
       )}

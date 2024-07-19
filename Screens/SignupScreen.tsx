@@ -44,7 +44,7 @@ const SignupScreen = ({navigation}) => {
     const {name, email, password} = data;
 
     try {
-      const response = await axios.post('http://192.168.100.32:5000/register', {
+      const response = await axios.post('http://44.201.164.10:5000/register', {
         name: name,
         email: email,
         password: password,

@@ -21,7 +21,7 @@ const Settings = () => {
       }
 
       // API call to logout endpoint
-      const url = 'http://35.154.37.245:5000/api/logout';
+      const url = 'http://44.201.164.10:5000/api/logout';
       const headers = {
         'Content-Type': 'application/json',
         'X-CSRFToken': csrf,
