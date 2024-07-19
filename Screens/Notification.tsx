@@ -1,73 +1,38 @@
-import React, {useEffect, useState, useRef} from 'react';
-import {View, Text, Button, Alert, StyleSheet, ScrollView} from 'react-native';
+import React, {useEffect} from 'react';
+import {Alert, View, Text} from 'react-native';
 
 const Notification = () => {
-  const [unknownCount, setUnknownCount] = useState(0);
-  const ws = useRef(null); // Use useRef for WebSocket instance
-
   useEffect(() => {
-    // Initialize WebSocket connection on component mount
-    ws.current = new WebSocket('ws://44.201.164.10:5000/ws/notifications/');
+    // Create a WebSocket connection
+    const ws = new WebSocket('ws://44.201.164.10:6000/ws/notifications/');
 
-    ws.current.onmessage = e => {
-      const data = JSON.parse(e.data);
-      console.log('Received message:', data);
-
-      // Check if identity is "Unknown" and increment count
-      if (data.identity === 'Unknown') {
-        setUnknownCount(prevCount => prevCount + 1);
-        //console.log('Unknown count:', unknownCount);
-
-        // Show notification if "Unknown" count reaches 10, and reset count
-        // if (unknownCount + 1 >= 10) {
-        //   console.log('Count is 10 initiating alert');
-        //   setUnknownCount(0);
-        //   Alert.alert(
-        //     'Multiple Unknown Identities Detected',
-        //     `Camera ID: ${data.camera_id} - Unknown identities detected multiple times.`,
-        //   );
-        // }
-      } else {
-        // Reset count if identity is not "Unknown"
-        if (unknownCount > 0) {
-          // console.log('Resetting count as identity is not Unknown');
-          // setUnknownCount(0);
-        }
-      }
+    // Function to handle incoming messages
+    const handleMessage = event => {
+      const message = event.data;
+      // Display an alert with the received message
+      Alert.alert('Notification', message);
     };
 
-    ws.current.onerror = e => {
-      console.log('WebSocket error', e);
+    // Set up event listeners
+    ws.onmessage = handleMessage;
+    ws.onerror = error => {
+      console.error('WebSocket Error: ', error);
+    };
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
     };
 
-    ws.current.onclose = e => {
-      console.log('WebSocket closed', e);
-    };
-
+    // Clean up the WebSocket connection on component unmount
     return () => {
-      // Close WebSocket connection on component unmount
-      ws.current.close();
+      ws.close();
     };
-  }, []); // Empty dependency array ensures effect runs only once on mount
+  }, []);
 
   return (
-    <View style={styles.container}>
-      <Button
-        title="Enable Notifications"
-        onPress={() => {
-          Alert.alert('Notifications enabled.');
-        }}
-      />
+    <View>
+      <Text>WebSocket Notifications</Text>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f4f4f4',
-    padding: 10,
-  },
-});
 
 export default Notification;
