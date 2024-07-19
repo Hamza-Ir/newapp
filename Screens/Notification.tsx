@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useRef} from 'react';
 import {View, Text, Button, Alert, StyleSheet, ScrollView} from 'react-native';
 
-const VideoStream = () => {
+const Notification = () => {
   const [unknownCount, setUnknownCount] = useState(0);
   const ws = useRef(null); // Use useRef for WebSocket instance
 
@@ -70,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VideoStream;
+export default Notification;

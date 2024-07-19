@@ -8,9 +8,10 @@ import Stream from './Screens/Stream';
 import Settings from './Screens/Settings';
 import LoginScreen from './Screens/LoginScreen';
 import SignupScreen from './Screens/SignupScreen';
-import VideoStream from './Screens/VideoStream';
+import VideoStream from './Screens/Notification';
 import 'react-native-url-polyfill/auto';
 import Toast from 'react-native-toast-message';
+import Notification from './Screens/Notification';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -51,8 +52,8 @@ const MainTabs = () => {
         }}
       />
       <Tab.Screen
-        name="VideoStream"
-        component={VideoStream}
+        name="Notification"
+        component={Notification}
         options={{
           tabBarIcon: ({color, size}) => (
             <Icon name="play-circle" color={color} size={size} />
