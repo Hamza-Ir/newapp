@@ -10,6 +10,7 @@ import Settings from './Screens/Settings';
 import LoginScreen from './Screens/LoginScreen';
 import SignupScreen from './Screens/SignupScreen';
 import Notification from './Screens/Notification';
+import {Alert} from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
 
@@ -65,12 +66,16 @@ const MainTabs = () => {
 };
 
 const App = () => {
-  const getToken = async () => {
-    const token = await messaging().getToken();
-    console.log('token', token);
-  };
+  // const getToken = async () => {
+  //   const token = await messaging().getToken();
+  //   console.log('token', token);
+  // };
   useEffect(() => {
-    getToken();
+    const unsubscribe = messaging().onMessage(async remoteMessage => {
+      Alert.alert('A new FCM message arrived!', JSON.stringify(remoteMessage));
+    });
+
+    return unsubscribe;
   }, []);
 
   return (
