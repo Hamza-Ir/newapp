@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {useEffect} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -8,10 +9,9 @@ import Stream from './Screens/Stream';
 import Settings from './Screens/Settings';
 import LoginScreen from './Screens/LoginScreen';
 import SignupScreen from './Screens/SignupScreen';
-import VideoStream from './Screens/Notification';
-import 'react-native-url-polyfill/auto';
-import Toast from 'react-native-toast-message';
 import Notification from './Screens/Notification';
+import messaging from '@react-native-firebase/messaging';
+import Toast from 'react-native-toast-message';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -65,6 +65,14 @@ const MainTabs = () => {
 };
 
 const App = () => {
+  const getToken = async () => {
+    const token = await messaging().getToken();
+    console.log('token', token);
+  };
+  useEffect(() => {
+    getToken();
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator>

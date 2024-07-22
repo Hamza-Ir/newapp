@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "808032962325",
+    "project_id": "watch-3e30d",
+    "storage_bucket": "watch-3e30d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:808032962325:android:0032ec623ff35581c84b1c",
+        "android_client_info": {
+          "package_name": "com.newapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqpVvNIsjYkX1sMIZ-UJrSDGsN9pwY80Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

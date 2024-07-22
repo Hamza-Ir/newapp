@@ -30,7 +30,7 @@ const LoginScreen = ({navigation}) => {
     const {email, password} = data;
 
     try {
-      const response = await axios.post('http://44.201.164.10:6000/api/login', {
+      const response = await axios.post('http://3.87.187.140:6000/api/login', {
         email,
         password,
       });

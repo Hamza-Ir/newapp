@@ -4,7 +4,7 @@ import {Alert, View, Text} from 'react-native';
 const Notification = () => {
   useEffect(() => {
     // Create a WebSocket connection
-    const ws = new WebSocket('ws://44.201.164.10:6000/ws/notifications/');
+    const ws = new WebSocket('3.87.187.140:6000');
 
     // Function to handle incoming messages
     const handleMessage = event => {

@@ -66,7 +66,7 @@ const HomeScreen = () => {
         return;
       }
 
-      const url = 'http://44.201.164.10:5000/api/uploadapi';
+      const url = 'http://3.87.187.140:6000/api/uploadapi';
       const headers = {
         'Content-Type': 'multipart/form-data',
         'X-CSRFToken': csrf,

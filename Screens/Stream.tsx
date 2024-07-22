@@ -32,14 +32,14 @@ const Stream = () => {
       };
 
       const response = await axios.get(
-        'http://44.201.164.10:5000/api/getDevicesurl',
+        'http://3.87.187.140:6000/api/getDevicesurl',
         {headers},
       );
       const streamsData = response.data;
 
       const streamsArray = Object.entries(streamsData).map(([name]) => ({
         name,
-        url: 'http://44.201.164.10:5000/vidstr/' + name,
+        url: 'http://3.87.187.140:6000/vidstr/' + name,
       }));
       setStreams(streamsArray);
     } catch (error) {
@@ -63,7 +63,7 @@ const Stream = () => {
       }
 
       // Make API call to update devices
-      const url = 'http://44.201.164.10:5000/api/updatedevices';
+      const url = 'http://3.87.187.140:6000/api/updatedevices';
 
       // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');
@@ -102,7 +102,7 @@ const Stream = () => {
   const handleDeleteStream = async name => {
     try {
       // Make API call to delete the stream
-      const url = 'http://44.201.164.10:5000/api/deleteDevice';
+      const url = 'http://3.87.187.140:6000/api/deleteDevice';
 
       // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');
