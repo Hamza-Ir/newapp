@@ -20,6 +20,7 @@
     "@react-navigation/native-stack": "^6.9.26",
     "@supabase/supabase-js": "^2.43.4",
     "axios": "^1.7.2",
+    "google-auth-library": "^9.11.0",
     "react": "18.2.0",
     "react-hook-form": "^7.51.5",
     "react-native": "0.73.5",
