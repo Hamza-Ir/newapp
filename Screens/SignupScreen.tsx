@@ -14,6 +14,7 @@ import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {supabase} from '../services/supabaseClient';
 import Toast from 'react-native-toast-message';
+import {SERVER_IP, SERVER_PORT} from '../config';
 
 // Validation schema
 const schema = yup.object().shape({
@@ -44,13 +45,16 @@ const SignupScreen = ({navigation}) => {
     const {name, email, password} = data;
 
     try {
-      const response = await axios.post('http://3.87.187.140:6000/register', {
-        name: name,
-        email: email,
-        password: password,
-        backendurl: '',
-        device_urls: [],
-      });
+      const response = await axios.post(
+        `http://${SERVER_IP}:${SERVER_PORT}/register`,
+        {
+          name: name,
+          email: email,
+          password: password,
+          backendurl: '',
+          device_urls: [],
+        },
+      );
 
       setLoading(false);
 

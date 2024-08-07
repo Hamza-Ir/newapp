@@ -4,6 +4,7 @@ import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
+import {SERVER_IP, SERVER_PORT} from '../config';
 
 const Settings = () => {
   const navigation = useNavigation();
@@ -21,7 +22,7 @@ const Settings = () => {
       }
 
       // API call to logout endpoint
-      const url = 'http://44.201.164.10:5000/api/logout';
+      const url = `http://${SERVER_IP}:${SERVER_PORT}/api/logout`;
       const headers = {
         'Content-Type': 'application/json',
         'X-CSRFToken': csrf,

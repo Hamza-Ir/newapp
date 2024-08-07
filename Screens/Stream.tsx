@@ -12,6 +12,7 @@ import React, {useState, useEffect} from 'react';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import {SERVER_IP, SERVER_PORT} from '../config';
 
 const Stream = () => {
   const [streams, setStreams] = useState<{name: string; url: string}[]>([]);
@@ -32,14 +33,14 @@ const Stream = () => {
       };
 
       const response = await axios.get(
-        'http://3.87.187.140:6000/api/getDevicesurl',
+        `http://${SERVER_IP}:${SERVER_PORT}/api/getDevicesurl`,
         {headers},
       );
       const streamsData = response.data;
 
       const streamsArray = Object.entries(streamsData).map(([name]) => ({
         name,
-        url: 'http://3.87.187.140:6000/vidstr/' + name,
+        url: `http://${SERVER_IP}:${SERVER_PORT}/vidstr/` + name,
       }));
       setStreams(streamsArray);
     } catch (error) {
@@ -63,7 +64,7 @@ const Stream = () => {
       }
 
       // Make API call to update devices
-      const url = 'http://3.87.187.140:6000/api/updatedevices';
+      const url = `http://${SERVER_IP}:${SERVER_PORT}/api/updatedevices`;
 
       // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');
@@ -102,7 +103,7 @@ const Stream = () => {
   const handleDeleteStream = async name => {
     try {
       // Make API call to delete the stream
-      const url = 'http://3.87.187.140:6000/api/deleteDevice';
+      const url = `http://${SERVER_IP}:${SERVER_PORT}/api/deleteDevice`;
 
       // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');

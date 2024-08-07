@@ -14,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
+import {SERVER_IP, SERVER_PORT} from '../config';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -66,7 +67,7 @@ const HomeScreen = () => {
         return;
       }
 
-      const url = 'http://3.87.187.140:6000/api/uploadapi';
+      const url = `http://${SERVER_IP}:${SERVER_PORT}/api/uploadapi`;
       const headers = {
         'Content-Type': 'multipart/form-data',
         'X-CSRFToken': csrf,

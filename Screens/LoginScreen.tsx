@@ -5,8 +5,8 @@ import {useForm, Controller} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
 import Toast from 'react-native-toast-message';
-import {Cookies} from '@react-native-cookies/cookies';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {SERVER_IP, SERVER_PORT} from '../config';
 
 // Validation schema
 const schema = yup.object().shape({
@@ -30,10 +30,13 @@ const LoginScreen = ({navigation}) => {
     const {email, password} = data;
 
     try {
-      const response = await axios.post('http://3.87.187.140:6000/api/login', {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        `http://${SERVER_IP}:${SERVER_PORT}/api/login`,
+        {
+          email,
+          password,
+        },
+      );
 
       if (response.status === 200) {
         // Login successful
