@@ -46,17 +46,16 @@ const LoginScreen = ({navigation}) => {
         });
 
         const userId = response.data.id;
-        console.log('User ID:', userId);
+        //console.log('User ID:', userId);
 
         // Save the unique ID to AsyncStorage or a state management solution
         await AsyncStorage.setItem('userId', userId);
 
         // Save the cookie
         const csrf = response.data.csrf;
-        console.log('User cookie:', csrf);
+        //console.log('User cookie:', csrf);
         await AsyncStorage.setItem('csrf', csrf);
 
-        console.log('Navigating to MainTabs');
         navigation.replace('MainTabs');
       } else {
         // Login failed with a custom message

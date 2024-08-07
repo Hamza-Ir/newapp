@@ -39,6 +39,7 @@ const Settings = () => {
 
       // Clear AsyncStorage after successful logout
       await AsyncStorage.removeItem('csrf');
+      await AsyncStorage.removeItem('userId');
 
       // Navigate to Login screen
       navigation.replace('Login');

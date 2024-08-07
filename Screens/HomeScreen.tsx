@@ -8,6 +8,7 @@ import {
   Image,
   TextInput,
   Button,
+  Alert,
 } from 'react-native';
 import {Camera, useCameraDevice} from 'react-native-vision-camera';
 import {useNavigation} from '@react-navigation/native';
@@ -15,6 +16,49 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import {SERVER_IP, SERVER_PORT} from '../config';
+import messaging from '@react-native-firebase/messaging';
+
+const sendTokenToServer = async token => {
+  try {
+    const csrf = await AsyncStorage.getItem('csrf');
+    const userId = await AsyncStorage.getItem('userId');
+
+    if (!csrf || !userId) {
+      throw new Error('Missing CSRF token or user ID');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrf,
+      id: userId,
+    };
+
+    const response = await fetch(
+      `http://${SERVER_IP}:${SERVER_PORT}/api/sendToken`,
+      {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({token}),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to send token to server');
+    }
+  } catch (error) {
+    console.error('Error sending token to server:', error);
+    Alert.alert('Error', 'Unable to send token to server.');
+  }
+};
+
+const getToken = async () => {
+  try {
+    const token = await messaging().getToken();
+    await sendTokenToServer(token);
+  } catch (error) {
+    console.error('Error getting token:', error);
+  }
+};
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -27,10 +71,10 @@ const HomeScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
       await checkPermission();
-      console.log('Fetching data from Flask');
     };
 
     fetchData();
+    getToken();
   }, []);
 
   const checkPermission = async () => {
@@ -40,10 +84,13 @@ const HomeScreen = () => {
 
   const takePicture = async () => {
     if (camera.current) {
-      const photo = await camera.current.takePhoto();
-      setImageData([...imageData, photo.path]);
-      setTakePhotoClicked(false);
-      console.log(photo.path);
+      try {
+        const photo = await camera.current.takePhoto();
+        setImageData([...imageData, photo.path]);
+        setTakePhotoClicked(false);
+      } catch (error) {
+        console.error('Error taking picture:', error);
+      }
     }
   };
 
@@ -63,8 +110,7 @@ const HomeScreen = () => {
       const csrf = await AsyncStorage.getItem('csrf');
 
       if (!userId || !csrf) {
-        console.error('User ID or CSRF token not found in AsyncStorage.');
-        return;
+        throw new Error('User ID or CSRF token not found');
       }
 
       const url = `http://${SERVER_IP}:${SERVER_PORT}/api/uploadapi`;
@@ -75,8 +121,6 @@ const HomeScreen = () => {
       };
 
       const response = await axios.post(url, data, {headers});
-      console.log(response.data);
-
       Toast.show({
         type: 'success',
         text1: 'Files uploaded successfully',
@@ -107,7 +151,7 @@ const HomeScreen = () => {
       />
       <Button title="Upload Files" onPress={handleFileUpload} />
       {takePhotoClicked ? (
-        <View style={{flex: 1}}>
+        <View style={styles.cameraContainer}>
           <Camera
             ref={camera}
             style={StyleSheet.absoluteFill}
@@ -132,7 +176,7 @@ const HomeScreen = () => {
           <TouchableOpacity
             style={styles.clickPhotoBtn}
             onPress={() => setTakePhotoClicked(true)}>
-            <Text style={{color: 'black'}}>Click Photo</Text>
+            <Text style={styles.clickPhotoText}>Click Photo</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -154,6 +198,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   captureButton: {color: 'white', bottom: -18, alignSelf: 'center'},
+  cameraContainer: {flex: 1},
   imageContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   image: {width: 100, height: 100, margin: 5},
   clickPhotoBtn: {
@@ -165,6 +210,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  clickPhotoText: {color: 'black'},
 });
 
 export default HomeScreen;

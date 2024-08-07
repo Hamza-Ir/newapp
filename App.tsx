@@ -12,8 +12,6 @@ import SignupScreen from './Screens/SignupScreen';
 import {Alert} from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SERVER_IP, SERVER_PORT} from './config';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -57,55 +55,8 @@ const MainTabs = () => {
   );
 };
 
-const sendTokenToServer = async token => {
-  try {
-    // Retrieve CSRF token and userId from AsyncStorage
-    const csrf = (await AsyncStorage.getItem('csrf')) || '';
-    const userId = (await AsyncStorage.getItem('userId')) || '';
-
-    // Set headers
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrf,
-      id: userId,
-    };
-
-    // Send POST request with the token and headers
-    const response = await fetch(
-      `http://${SERVER_IP}:${SERVER_PORT}/api/sendToken`,
-      {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({token}),
-      },
-    );
-
-    // Check if the response is ok
-    if (!response.ok) {
-      throw new Error('Failed to send token to server');
-    }
-
-    // // Parse and log the server response
-    // const data = await response.json();
-    // console.log('Server response:', data);
-  } catch (error) {
-    console.error('Error sending token to server:', error);
-  }
-};
-
-const getToken = async () => {
-  try {
-    const token = await messaging().getToken();
-    //console.log('Token:', token);
-    await sendTokenToServer(token);
-  } catch (error) {
-    console.error('Error getting token:', error);
-  }
-};
-
 const App = () => {
   useEffect(() => {
-    getToken();
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       Alert.alert('Intruder Detected!');
     });
