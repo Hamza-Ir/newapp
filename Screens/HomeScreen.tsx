@@ -54,6 +54,7 @@ const sendTokenToServer = async token => {
 const getToken = async () => {
   try {
     const token = await messaging().getToken();
+    await AsyncStorage.setItem('token', token);
     await sendTokenToServer(token);
   } catch (error) {
     console.error('Error getting token:', error);
@@ -79,7 +80,12 @@ const HomeScreen = () => {
 
   const checkPermission = async () => {
     const newCameraPermission = await Camera.requestCameraPermission();
-    console.log(newCameraPermission);
+    if (newCameraPermission !== 'granted') {
+      Alert.alert(
+        'Permission Required',
+        'Camera permission is required to take photos.',
+      );
+    }
   };
 
   const takePicture = async () => {

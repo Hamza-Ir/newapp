@@ -14,6 +14,7 @@ const Settings = () => {
       // Retrieve userId and csrf from AsyncStorage
       const userId = await AsyncStorage.getItem('userId');
       const csrf = await AsyncStorage.getItem('csrf');
+      const token = await AsyncStorage.getItem('token');
 
       // If userId or csrf is not available, handle the case (optional)
       if (!userId || !csrf) {
@@ -29,7 +30,13 @@ const Settings = () => {
         id: userId,
       };
 
-      const response = await axios.post(url, {}, {headers});
+      const response = await axios.post(
+        url,
+        {
+          token: token,
+        },
+        {headers},
+      );
 
       // Handle logout success
       Toast.show({
@@ -38,11 +45,12 @@ const Settings = () => {
       });
 
       // Clear AsyncStorage after successful logout
+
       await AsyncStorage.removeItem('csrf');
       await AsyncStorage.removeItem('userId');
-
-      // Navigate to Login screen
+      await AsyncStorage.removeItem('token');
       navigation.replace('Login');
+      // Navigate to Login screen
     } catch (error) {
       // Handle errors
       console.error('Logout error:', error);
