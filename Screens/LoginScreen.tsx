@@ -1,12 +1,20 @@
 import axios from 'axios';
 import React, {useState, useEffect} from 'react';
-import {View, Text, TextInput, Button, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNRestart from 'react-native-restart';
+import {getServerConfig} from '../config';
 
 // Validation schema
 const schema = yup.object().shape({
@@ -28,35 +36,57 @@ const LoginScreen = ({navigation}) => {
 
   const [ip, setIp] = useState('');
   const [port, setPort] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Load the current IP and port from AsyncStorage
   useEffect(() => {
     const loadServerConfig = async () => {
-      const storedIp = (await AsyncStorage.getItem('SERVER_IP')) || '';
-      const storedPort = (await AsyncStorage.getItem('SERVER_PORT')) || '';
-      setIp(storedIp);
-      setPort(storedPort);
+      const {ip: ipadress, port: portadress} = await getServerConfig();
+      setIp(ipadress);
+      setPort(portadress);
     };
 
     loadServerConfig();
   }, []);
 
+  // Check server connectivity
+  const checkServerConnectivity = async (ip, port) => {
+    try {
+      const response = await axios.get(`http://${ip}:${port}/api/test`);
+      return response.status === 200;
+    } catch (error) {
+      return false;
+    }
+  };
+
   // Save the IP and port to AsyncStorage
   const saveServerConfig = async () => {
-    try {
-      await AsyncStorage.setItem('SERVER_IP', ip);
-      await AsyncStorage.setItem('SERVER_PORT', port);
+    const isConnected = await checkServerConnectivity(ip, port);
+    if (isConnected) {
+      try {
+        await AsyncStorage.setItem('SERVER_IP', ip);
+        await AsyncStorage.setItem('SERVER_PORT', port);
+        Toast.show({
+          type: 'success',
+          text1: 'Server configuration saved',
+        });
+      } catch (error) {
+        console.error('Error saving server config:', error);
+      }
+    } else {
       Toast.show({
-        type: 'success',
-        text1: 'Server configuration saved',
+        type: 'error',
+        text1: 'Server Connectivity Failed',
+        text2:
+          'Unable to connect to the server with the provided IP address and port.',
       });
-    } catch (error) {
-      console.error('Error saving server config:', error);
     }
   };
 
   const handleLogin = async data => {
     const {email, password} = data;
+
+    setLoading(true); // Show the loading spinner
 
     try {
       const response = await axios.post(`http://${ip}:${port}/api/login`, {
@@ -110,6 +140,8 @@ const LoginScreen = ({navigation}) => {
         });
       }
       console.log('Catch error:', err);
+    } finally {
+      setLoading(false); // Hide the loading spinner
     }
   };
 
@@ -130,8 +162,10 @@ const LoginScreen = ({navigation}) => {
         value={port}
         onChangeText={setPort}
       />
-      <View style={{paddingBottom: 90}}>
-        <Button title="Save Configuration" onPress={saveServerConfig} />
+      <View style={{paddingBottom: 50}}>
+        <View style={styles.buttonWrapper}>
+          <Button title="Save Configuration" onPress={saveServerConfig} />
+        </View>
       </View>
 
       <Text style={styles.heading}>Login</Text>
@@ -182,7 +216,20 @@ const LoginScreen = ({navigation}) => {
         )}
       />
 
-      <Button title="Login" onPress={handleSubmit(handleLogin)} />
+      <View style={styles.buttonWrapper}>
+        <Button
+          title="Login"
+          onPress={handleSubmit(handleLogin)}
+          disabled={loading}
+        />
+        {loading && (
+          <ActivityIndicator
+            style={styles.spinner}
+            size="small"
+            color="#0000ff"
+          />
+        )}
+      </View>
 
       <Text style={styles.makeAccount}>
         Don't have an account?{'  '}
@@ -239,6 +286,15 @@ const styles = StyleSheet.create({
     color: 'grey',
     marginTop: 14,
     textAlign: 'center',
+  },
+  buttonWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  spinner: {
+    position: 'absolute',
+    top: 10,
   },
 });
 

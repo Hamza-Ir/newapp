@@ -13,7 +13,7 @@ import React, {useState, useEffect} from 'react';
 import {VLCPlayer} from 'react-native-vlc-media-player';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {SERVER_IP, SERVER_PORT} from '../config';
+import {getServerConfig} from '../config';
 
 const Stream = () => {
   const [streams, setStreams] = useState<{name: string; url: string}[]>([]);
@@ -24,7 +24,10 @@ const Stream = () => {
   const [loading, setLoading] = useState(false); // Loading state
 
   const fetchStreams = async () => {
+    setLoading(true); // Start loading
     try {
+      const {ip, port} = await getServerConfig(); // Get server config
+
       const csrf = await AsyncStorage.getItem('csrf');
       const userId = await AsyncStorage.getItem('userId');
 
@@ -35,19 +38,22 @@ const Stream = () => {
       };
 
       const response = await axios.get(
-        `http://${SERVER_IP}:${SERVER_PORT}/api/getDevicesurl`,
+        `http://${ip}:${port}/api/getDevicesurl`,
         {headers},
       );
+
       const streamsData = response.data;
 
       const streamsArray = Object.entries(streamsData).map(([name]) => ({
         name,
-        url: `http://${SERVER_IP}:${SERVER_PORT}/vidstr/` + name,
+        url: `http://${ip}:${port}/vidstr/` + name,
       }));
       setStreams(streamsArray);
     } catch (error) {
       console.error('Error fetching streams:', error);
       Alert.alert('Error', 'Failed to fetch streams. Please try again.');
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -67,7 +73,9 @@ const Stream = () => {
         return;
       }
 
-      const url = `http://${SERVER_IP}:${SERVER_PORT}/api/updatedevices`;
+      const {ip, port} = await getServerConfig(); // Get server config
+
+      const url = `http://${ip}:${port}/api/updatedevices`;
 
       const csrf = await AsyncStorage.getItem('csrf');
       const userId = await AsyncStorage.getItem('userId');
@@ -102,7 +110,9 @@ const Stream = () => {
   const handleDeleteStream = async name => {
     setLoading(true); // Start loading
     try {
-      const url = `http://${SERVER_IP}:${SERVER_PORT}/api/deleteDevice`;
+      const {ip, port} = await getServerConfig(); // Get server config
+
+      const url = `http://${ip}:${port}/api/deleteDevice`;
 
       const csrf = await AsyncStorage.getItem('csrf');
       const userId = await AsyncStorage.getItem('userId');

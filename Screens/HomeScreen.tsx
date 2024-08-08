@@ -15,8 +15,8 @@ import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
-import {SERVER_IP, SERVER_PORT} from '../config';
 import messaging from '@react-native-firebase/messaging';
+import {getServerConfig} from '../config';
 
 const sendTokenToServer = async token => {
   try {
@@ -35,11 +35,12 @@ const sendTokenToServer = async token => {
       id: userId,
     };
 
-    // Hardcoded IP and Port
-    const SERVER_IP = '35.173.188.226'; // Replace with your actual IP
-    const SERVER_PORT = '6000'; // Replace with your actual port
+    //getting ip address and port
+    const {ip, port} = await getServerConfig();
+    console.log('Server IP:', ip);
+    console.log('Server Port:', port);
 
-    const url = `http://${SERVER_IP}:${SERVER_PORT}/api/sendToken`;
+    const url = `http://${ip}:${port}/api/sendToken`;
     console.log('Request URL:', url);
 
     const response = await fetch(url, {
@@ -130,8 +131,9 @@ const HomeScreen = () => {
       if (!userId || !csrf) {
         throw new Error('User ID or CSRF token not found');
       }
+      const {ip, port} = await getServerConfig();
 
-      const url = `http://${SERVER_IP}:${SERVER_PORT}/api/uploadapi`;
+      const url = `http://${ip}:${port}/api/uploadapi`;
       const headers = {
         'Content-Type': 'multipart/form-data',
         'X-CSRFToken': csrf,

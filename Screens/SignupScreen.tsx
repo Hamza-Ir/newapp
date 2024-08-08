@@ -1,20 +1,18 @@
 import axios from 'axios';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
   TextInput,
   Button,
   StyleSheet,
-  ToastAndroid,
   ActivityIndicator,
 } from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
-import {supabase} from '../services/supabaseClient';
 import Toast from 'react-native-toast-message';
-import {SERVER_IP, SERVER_PORT} from '../config';
+import {getServerConfig} from '../config'; // Assuming this is the correct path
 
 // Validation schema
 const schema = yup.object().shape({
@@ -32,6 +30,9 @@ const schema = yup.object().shape({
 
 const SignupScreen = ({navigation}) => {
   const [loading, setLoading] = useState(false);
+  const [ip, setIp] = useState('');
+  const [port, setPort] = useState('');
+
   const {
     control,
     handleSubmit,
@@ -40,23 +41,61 @@ const SignupScreen = ({navigation}) => {
     resolver: yupResolver(schema),
   });
 
+  // Load the current IP and port from getServerConfig
+  useEffect(() => {
+    const loadServerConfig = async () => {
+      const {ip: storedIp, port: storedPort} = await getServerConfig();
+      setIp(storedIp);
+      setPort(storedPort);
+    };
+
+    loadServerConfig();
+  }, []);
+
+  // Check server connectivity
+  const checkServerConnectivity = async (ip, port) => {
+    try {
+      const response = await axios.get(`http://${ip}:${port}/api/test`);
+      return response.status === 200;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Save the IP and port to getServerConfig
+  const saveServerConfig = async () => {
+    const isConnected = await checkServerConnectivity(ip, port);
+    if (isConnected) {
+      try {
+        await getServerConfig(ip, port); // Update the config with new IP and port
+        Toast.show({
+          type: 'success',
+          text1: 'Server configuration saved',
+        });
+      } catch (error) {
+        console.error('Error saving server config:', error);
+      }
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'Server Connectivity Failed',
+        text2:
+          'Unable to connect to the server with the provided IP address and port.',
+      });
+    }
+  };
+
   const handleSignup = async data => {
     setLoading(true);
     const {name, email, password} = data;
 
     try {
-      const response = await axios.post(
-        `http://${SERVER_IP}:${SERVER_PORT}/register`,
-        {
-          name: name,
-          email: email,
-          password: password,
-          backendurl: '',
-          device_urls: [],
-        },
-      );
-
-      setLoading(false);
+      const response = await axios.post(`http://${ip}:${port}/api/register`, {
+        name,
+        email,
+        password,
+        device_urls: {},
+      });
 
       if (response.status === 201) {
         Toast.show({
@@ -65,8 +104,6 @@ const SignupScreen = ({navigation}) => {
           text2: 'You can now log in.',
           position: 'bottom',
         });
-        console.log('Navigating to LoginScreen');
-        console.log(response.data.message);
         navigation.replace('Login');
       } else {
         Toast.show({
@@ -75,22 +112,45 @@ const SignupScreen = ({navigation}) => {
           text2: response.data.message,
           position: 'bottom',
         });
-        console.log('Signup error:', response.data.message);
       }
     } catch (err) {
-      setLoading(false);
       Toast.show({
         type: 'error',
         text1: 'Signup failed',
-        text2: err.response.data.message,
+        text2: err.response?.data?.message || 'An error occurred.',
         position: 'bottom',
       });
-      console.log('Catch error:', err.response.data.message);
+      console.log('Catch error:', err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
+      <View style={styles.serverInfoContainer}>
+        <Text style={styles.label}>Current IP Address: {ip}</Text>
+        <Text style={styles.label}>Current Port: {port}</Text>
+      </View>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Enter IP Address"
+        value={ip}
+        onChangeText={setIp}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Enter Port"
+        value={port}
+        onChangeText={setPort}
+      />
+      <View style={{paddingBottom: 30}}>
+        <View style={styles.buttonWrapper}>
+          <Button title="Save Configuration" onPress={saveServerConfig} />
+        </View>
+      </View>
+
       <Text style={styles.heading}>Sign Up</Text>
 
       <Text style={styles.labels}>Name:</Text>
@@ -189,7 +249,9 @@ const SignupScreen = ({navigation}) => {
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
-        <Button title="Sign Up" onPress={handleSubmit(handleSignup)} />
+        <View style={styles.buttonWrapper}>
+          <Button title="Sign Up" onPress={handleSubmit(handleSignup)} />
+        </View>
       )}
 
       <Text style={styles.makeAccount}>
@@ -211,14 +273,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   heading: {
-    fontSize: 34,
+    fontSize: 25,
     color: 'black',
     fontWeight: 'bold',
     marginBottom: 24,
     textAlign: 'center',
   },
   labels: {
-    fontSize: 18,
+    fontSize: 14,
     color: 'black',
     fontWeight: 'bold',
   },
@@ -230,9 +292,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingLeft: 8,
   },
+  label: {
+    fontSize: 12,
+    marginBottom: 10,
+    color: 'black',
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
   errorText: {
     color: 'red',
     marginBottom: 8,
+  },
+  buttonWrapper: {
+    position: 'relative',
+    alignItems: 'center',
+    marginTop: 20,
   },
   makeAccount: {
     color: 'grey',

@@ -3,13 +3,14 @@ import {View, Text, TouchableOpacity, FlatList, StyleSheet} from 'react-native';
 import axios from 'axios';
 import {useFocusEffect} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SERVER_IP, SERVER_PORT} from '../config';
+import {getServerConfig} from '../config';
 
 const TrainedData = () => {
   const [names, setNames] = useState([]);
 
   const fetchNames = async () => {
     try {
+      const {ip, port} = await getServerConfig(); // Get server config
       const userId = await AsyncStorage.getItem('userId');
       const csrf = await AsyncStorage.getItem('csrf');
 
@@ -24,10 +25,10 @@ const TrainedData = () => {
       };
 
       const response = await axios.get(
-        `http://${SERVER_IP}:${SERVER_PORT}/api/GetTrainedData`,
+        `http://${ip}:${port}/api/GetTrainedData`,
         {headers},
       );
-      setNames(response.data); // Assuming the response is an array of names
+      setNames(response.data); //response is an array of names
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -41,6 +42,7 @@ const TrainedData = () => {
 
   const deleteName = async name => {
     try {
+      const {ip, port} = await getServerConfig(); // Get server config
       const userId = await AsyncStorage.getItem('userId');
       const csrf = await AsyncStorage.getItem('csrf');
 
@@ -55,7 +57,7 @@ const TrainedData = () => {
       };
 
       await axios.post(
-        `http://${SERVER_IP}:${SERVER_PORT}/api/deleteImage`,
+        `http://${ip}:${port}/api/deleteImage`,
         {name},
         {headers},
       );
