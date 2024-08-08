@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 import {SERVER_IP, SERVER_PORT} from '../config';
+import RNRestart from 'react-native-restart';
 
 const Settings = () => {
   const navigation = useNavigation();
@@ -49,13 +50,13 @@ const Settings = () => {
       await AsyncStorage.removeItem('csrf');
       await AsyncStorage.removeItem('userId');
       await AsyncStorage.removeItem('token');
-      navigation.replace('Login');
+      RNRestart.Restart();
       // Navigate to Login screen
     } catch (error) {
       // Handle errors
       console.error('Logout error:', error);
       // Optionally, handle logout failure and navigate to login screen
-      navigation.replace('Login');
+      RNRestart.Restart();
     }
   };
 

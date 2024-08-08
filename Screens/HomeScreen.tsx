@@ -22,6 +22,8 @@ const sendTokenToServer = async token => {
   try {
     const csrf = await AsyncStorage.getItem('csrf');
     const userId = await AsyncStorage.getItem('userId');
+    console.log('CSRF:', csrf);
+    console.log('User ID:', userId);
 
     if (!csrf || !userId) {
       throw new Error('Missing CSRF token or user ID');
@@ -33,18 +35,25 @@ const sendTokenToServer = async token => {
       id: userId,
     };
 
-    const response = await fetch(
-      `http://${SERVER_IP}:${SERVER_PORT}/api/sendToken`,
-      {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({token}),
-      },
-    );
+    // Hardcoded IP and Port
+    const SERVER_IP = '35.173.188.226'; // Replace with your actual IP
+    const SERVER_PORT = '6000'; // Replace with your actual port
+
+    const url = `http://${SERVER_IP}:${SERVER_PORT}/api/sendToken`;
+    console.log('Request URL:', url);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({token}),
+    });
 
     if (!response.ok) {
       throw new Error('Failed to send token to server');
     }
+
+    const responseData = await response.json();
+    console.log('Parsed response data:', responseData);
   } catch (error) {
     console.error('Error sending token to server:', error);
     Alert.alert('Error', 'Unable to send token to server.');
@@ -68,6 +77,7 @@ const HomeScreen = () => {
   const [imageData, setImageData] = useState([]);
   const [takePhotoClicked, setTakePhotoClicked] = useState(false);
   const [personName, setPersonName] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,6 +112,8 @@ const HomeScreen = () => {
 
   const handleFileUpload = async () => {
     try {
+      setLoading(true);
+
       const data = new FormData();
       data.append('name', personName);
       imageData.forEach((path, index) => {
@@ -139,6 +151,8 @@ const HomeScreen = () => {
         type: 'error',
         text1: 'Error uploading images',
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,7 +169,15 @@ const HomeScreen = () => {
         value={personName}
         onChangeText={setPersonName}
       />
-      <Button title="Upload Files" onPress={handleFileUpload} />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <Button
+          title="Upload Files"
+          onPress={handleFileUpload}
+          disabled={loading}
+        />
+      )}
       {takePhotoClicked ? (
         <View style={styles.cameraContainer}>
           <Camera

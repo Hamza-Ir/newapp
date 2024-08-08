@@ -13,6 +13,7 @@ import {Alert} from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import TrainedData from './Screens/TrainedData';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -38,6 +39,16 @@ const MainTabs = () => {
         component={Stream}
         options={{
           tabBarLabel: 'RTSP Stream',
+          tabBarIcon: ({color, size}) => (
+            <Icon name="videocam" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="TrainedData"
+        component={TrainedData}
+        options={{
+          tabBarLabel: 'Trained data',
           tabBarIcon: ({color, size}) => (
             <Icon name="videocam" color={color} size={size} />
           ),
@@ -92,21 +103,26 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="Signup"
-          component={SignupScreen}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabs}
-          options={{headerShown: false}}
-        />
+        {userId ? (
+          <Stack.Screen
+            name="MainTabs"
+            component={MainTabs}
+            options={{headerShown: false}}
+          />
+        ) : (
+          <>
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{headerShown: false}}
+            />
+            <Stack.Screen
+              name="Signup"
+              component={SignupScreen}
+              options={{headerShown: false}}
+            />
+          </>
+        )}
       </Stack.Navigator>
       <Toast />
     </NavigationContainer>

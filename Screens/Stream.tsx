@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {VLCPlayer} from 'react-native-vlc-media-player';
@@ -20,6 +21,7 @@ const Stream = () => {
   const [showInput, setShowInput] = useState(false);
   const [newStreamUrl, setNewStreamUrl] = useState('');
   const [newStreamName, setNewStreamName] = useState('');
+  const [loading, setLoading] = useState(false); // Loading state
 
   const fetchStreams = async () => {
     try {
@@ -54,81 +56,75 @@ const Stream = () => {
   }, []);
 
   const handleAddStream = async () => {
+    setLoading(true); // Start loading
     try {
       if (newStreamUrl.trim() === '' || newStreamName.trim() === '') {
         Alert.alert(
           'Invalid Input',
           'The stream URL and name cannot be empty.',
         );
+        setLoading(false); // Stop loading
         return;
       }
 
-      // Make API call to update devices
       const url = `http://${SERVER_IP}:${SERVER_PORT}/api/updatedevices`;
 
-      // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');
       const userId = await AsyncStorage.getItem('userId');
 
-      // Prepare headers
       const headers = {
         'Content-Type': 'application/json',
         'X-CSRFToken': csrf,
         id: userId,
       };
 
-      // Prepare data payload
       const data = {
         device_url: {
           [newStreamName]: newStreamUrl,
         },
       };
 
-      // Send POST request
       await axios.put(url, data, {headers});
 
-      // Fetch updated streams
       await fetchStreams();
 
-      // Clear input fields and hide input
       setNewStreamUrl('');
       setNewStreamName('');
       setShowInput(false);
     } catch (error) {
       console.error('Error adding stream:', error);
       Alert.alert('Error', 'Failed to add stream. Please try again.');
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
   const handleDeleteStream = async name => {
+    setLoading(true); // Start loading
     try {
-      // Make API call to delete the stream
       const url = `http://${SERVER_IP}:${SERVER_PORT}/api/deleteDevice`;
 
-      // Retrieve CSRF token and user ID from AsyncStorage
       const csrf = await AsyncStorage.getItem('csrf');
       const userId = await AsyncStorage.getItem('userId');
 
-      // Prepare headers
       const headers = {
         'Content-Type': 'application/json',
         'X-CSRFToken': csrf,
         id: userId,
       };
 
-      // Prepare data payload
       const data = {
         key: name,
       };
 
-      // Send POST request
       await axios.post(url, data, {headers});
 
-      // Fetch updated streams
       await fetchStreams();
     } catch (error) {
       console.error('Error deleting stream:', error);
       Alert.alert('Error', 'Failed to delete stream. Please try again.');
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -145,7 +141,11 @@ const Stream = () => {
         />
         <Text style={styles.streamName}>{item.name}</Text>
       </TouchableOpacity>
-      <Button title="Delete" onPress={() => handleDeleteStream(item.name)} />
+      <Button
+        title="Delete"
+        onPress={() => handleDeleteStream(item.name)}
+        disabled={loading} // Disable button while loading
+      />
     </View>
   );
 
@@ -192,19 +192,42 @@ const Stream = () => {
                 onChangeText={setNewStreamName}
               />
               <View style={styles.buttonContainer}>
-                <Button title="Done" onPress={handleAddStream} />
-                <Button title="Cancel" onPress={() => setShowInput(false)} />
+                <Button
+                  title="Done"
+                  onPress={handleAddStream}
+                  disabled={loading} // Disable button while loading
+                />
+                <Button
+                  title="Cancel"
+                  onPress={() => setShowInput(false)}
+                  disabled={loading} // Disable button while loading
+                />
               </View>
             </View>
           ) : (
             <>
               <View style={styles.addButton}>
-                <Button title="Add Stream" onPress={() => setShowInput(true)} />
+                <Button
+                  title="Add Stream"
+                  onPress={() => setShowInput(true)}
+                  disabled={loading} // Disable button while loading
+                />
               </View>
               <View>
-                <Button title="refresh" onPress={() => fetchStreams()} />
+                <Button
+                  title="Refresh"
+                  onPress={fetchStreams}
+                  disabled={loading} // Disable button while loading
+                />
               </View>
             </>
+          )}
+          {loading && ( // Show loading indicator while loading
+            <ActivityIndicator
+              size="large"
+              color="blue"
+              style={styles.loading}
+            />
           )}
         </>
       )}
@@ -295,6 +318,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: 'gray',
     textAlign: 'center',
+  },
+  loading: {
+    position: 'absolute',
+    bottom: 0,
+    marginBottom: 10,
   },
 });
 

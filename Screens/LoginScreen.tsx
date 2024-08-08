@@ -1,12 +1,12 @@
 import axios from 'axios';
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, TextInput, Button, StyleSheet} from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import * as yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {SERVER_IP, SERVER_PORT} from '../config';
+import RNRestart from 'react-native-restart';
 
 // Validation schema
 const schema = yup.object().shape({
@@ -26,17 +26,43 @@ const LoginScreen = ({navigation}) => {
     resolver: yupResolver(schema),
   });
 
+  const [ip, setIp] = useState('');
+  const [port, setPort] = useState('');
+
+  // Load the current IP and port from AsyncStorage
+  useEffect(() => {
+    const loadServerConfig = async () => {
+      const storedIp = (await AsyncStorage.getItem('SERVER_IP')) || '';
+      const storedPort = (await AsyncStorage.getItem('SERVER_PORT')) || '';
+      setIp(storedIp);
+      setPort(storedPort);
+    };
+
+    loadServerConfig();
+  }, []);
+
+  // Save the IP and port to AsyncStorage
+  const saveServerConfig = async () => {
+    try {
+      await AsyncStorage.setItem('SERVER_IP', ip);
+      await AsyncStorage.setItem('SERVER_PORT', port);
+      Toast.show({
+        type: 'success',
+        text1: 'Server configuration saved',
+      });
+    } catch (error) {
+      console.error('Error saving server config:', error);
+    }
+  };
+
   const handleLogin = async data => {
     const {email, password} = data;
 
     try {
-      const response = await axios.post(
-        `http://${SERVER_IP}:${SERVER_PORT}/api/login`,
-        {
-          email,
-          password,
-        },
-      );
+      const response = await axios.post(`http://${ip}:${port}/api/login`, {
+        email,
+        password,
+      });
 
       if (response.status === 200) {
         // Login successful
@@ -56,7 +82,9 @@ const LoginScreen = ({navigation}) => {
         //console.log('User cookie:', csrf);
         await AsyncStorage.setItem('csrf', csrf);
 
-        navigation.replace('MainTabs');
+        setTimeout(() => {
+          RNRestart.Restart();
+        }, 3000);
       } else {
         // Login failed with a custom message
         Toast.show({
@@ -87,6 +115,25 @@ const LoginScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.label}>Current IP Address: {ip}</Text>
+      <Text style={styles.label}>Current Port: {port}</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Enter IP Address"
+        value={ip}
+        onChangeText={setIp}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Enter Port"
+        value={port}
+        onChangeText={setPort}
+      />
+      <View style={{paddingBottom: 90}}>
+        <Button title="Save Configuration" onPress={saveServerConfig} />
+      </View>
+
       <Text style={styles.heading}>Login</Text>
 
       <Text style={styles.labels}>Email:</Text>
@@ -176,6 +223,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginBottom: 12,
     paddingLeft: 8,
+  },
+  label: {
+    fontSize: 12,
+    marginBottom: 10,
+    color: 'black',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
   errorText: {
     color: 'red',
